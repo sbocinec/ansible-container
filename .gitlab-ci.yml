@@ -1,0 +1,24 @@
+stages:
+  - build
+
+before_script:
+  - docker info
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build-docker-slim:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add bash
+    - ./docker/build.sh -d slim -l
+
+build-docker-alpine:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - apk add bash
+    - ./docker/build.sh -d alpine
