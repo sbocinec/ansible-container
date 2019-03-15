@@ -26,7 +26,7 @@ while getopts "d:l" opt; do
   esac
 done
 
-IMAGE_NAME="juniq/ansible-container"
+IMAGE_NAME="sbocinec/ansible-container"
 if [ "${CI_REGISTRY_IMAGE}" ]; then
   IMAGE_NAME="${CI_REGISTRY_IMAGE}"
 elif [ "${DOCKER_REPO}" ]; then
