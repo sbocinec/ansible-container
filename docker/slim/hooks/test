@@ -1,0 +1,9 @@
+#!/bin/bash
+
+. ../ANSIBLE_VERSION
+
+DISTRO=$(echo $DOCKERFILE_PATH | sed -e 's/.*\/\(.*\)\/Dockerfile/\1/')
+
+for version in $ANSIBLE_VERSION; do
+    docker run -t --rm  ${DOCKER_REPO}:${version}-${DISTRO} |grep ansible-playbook |grep $version
+done

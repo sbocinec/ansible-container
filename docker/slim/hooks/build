@@ -1,0 +1,9 @@
+#!/bin/bash
+
+. ../ANSIBLE_VERSION
+
+DISTRO=$(echo $DOCKERFILE_PATH | sed -e 's/.*\/\(.*\)\/Dockerfile/\1/')
+
+for version in $ANSIBLE_VERSION; do
+    docker build --build-arg=ANSIBLE_VERSION=$version -t ${DOCKER_REPO}:${version}-${DISTRO} .
+done
