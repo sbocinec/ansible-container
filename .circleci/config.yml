@@ -10,4 +10,5 @@ jobs:
           name: build docker images
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            ls -la
             docker/build-circleci.sh
