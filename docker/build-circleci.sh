@@ -31,8 +31,8 @@ if [ "${CI_REGISTRY_IMAGE}" ]; then
   IMAGE_NAME="${CI_REGISTRY_IMAGE}"
 elif [ "${DOCKER_REPO}" ]; then
   IMAGE_NAME="${DOCKER_REPO}"
-elif [ "${CCI_IMAGE}" ]; then
-  IMAGE_NAME="${CCI_IMAGE}"
+elif [ "${DOCKER_IMAGE}" ]; then
+  IMAGE_NAME="${DOCKER_IMAGE}"
 fi
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/ && pwd )"
