@@ -25,4 +25,4 @@ workflows:
       - build:
           filters:
             tags:
-              only: /^circleci$/
+              only: /^master$/
