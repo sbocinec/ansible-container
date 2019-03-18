@@ -5,14 +5,17 @@ jobs:
 
     steps:
       - checkout
-
-      - run: ls -la 
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - run:
-          name: build docker images
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-            docker/build-circleci.sh
+          name: login to docker hub
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - run:
+          name: build docker slim images
+          command: docker/build-circleci.sh -d slim -l
+      
+      - run:
+          name: build docker alpine images
+          command: docker/build-circleci.sh -d alpine
 
 
 workflows:
