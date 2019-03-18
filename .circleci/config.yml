@@ -1,15 +1,13 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: $IMAGE_NAME
-        auth:
-          username: $DOCKER_HUB_USER
-          password: $DOCKER_HUB_PW
+    machine: true
 
     steps:
       - checkout
 
       - run:
           name: build docker images
-          command: docker/build-circleci.sh
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            docker/build-circleci.sh
