@@ -6,9 +6,20 @@ jobs:
     steps:
       - checkout
 
+      - run: ls -la 
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - run:
           name: build docker images
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-            ls -la
             docker/build-circleci.sh
+
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^circleci$/
