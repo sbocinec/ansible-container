@@ -5,7 +5,7 @@ ARG ANSIBLE_VERSION
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential libffi-dev libssl-dev
 RUN pip3 install --upgrade pip
-RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}.*
+RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}
 
 FROM python:3.6-slim
 

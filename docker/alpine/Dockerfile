@@ -4,7 +4,7 @@ ARG ANSIBLE_VERSION
 
 RUN apk --no-cache add build-base libffi-dev openssl-dev && env
 RUN pip3 install --upgrade pip
-RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}.*
+RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}
 
 FROM python:3.6-alpine
 
