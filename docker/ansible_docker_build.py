@@ -156,7 +156,7 @@ def tag_images(images, repo, os, latest, latest_dict, latest_value):
                     # major.minor
                     cmd = 'docker tag {}:{}-{} {}:{}'.format(repo, image, os, repo, ver_maj)
                     print(' {}'.format(cmd))
-                    res = subprocess.run(cmd, shell=true, check=false)
+                    res = subprocess.run(cmd, shell=True, check=False)
                     if res.returncode != 0:
                         images[image] = False
                         next
