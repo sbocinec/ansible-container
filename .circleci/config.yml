@@ -17,8 +17,9 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -r docker/requirements.txt
-            ./docker/ansible_docker_build.py -o slim -l
-            ./docker/ansible_docker_build.py -o alpine
+            cd docker
+            ./ansible_docker_build.py -o slim -l
+            ./ansible_docker_build.py -o alpine
 
 workflows:
   version: 2

@@ -105,7 +105,7 @@ def check_version(ansible_tags, docker_tags):
 
 def build_images(images, repo, os):
     for image in images:
-        cmd = 'docker build --build-arg=ANSIBLE_VERSION={} -t {}:{}-{} .'.format(image, repo, image, os)
+        cmd = 'docker build --build-arg=ANSIBLE_VERSION={} -t {}:{}-{} {}/'.format(image, repo, image, os, os)
         print(' {}'.format(cmd))
         res = subprocess.run(cmd, shell=True, check=False)
         if res.returncode != 0:
