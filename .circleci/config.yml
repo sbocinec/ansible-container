@@ -16,7 +16,7 @@ jobs:
             pyenv global 3.5.2
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            pip install -r docker/requirements.txt
             ./docker/ansible_docker_build.py -o slim -l
             ./docker/ansible_docker_build.py -o alpine
 
