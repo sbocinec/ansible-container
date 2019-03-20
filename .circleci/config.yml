@@ -1,22 +1,24 @@
 version: 2
 jobs:
   build:
-    machine: true
+    machine:
+      enabled: true
+      image: circleci/classic:latest
 
     steps:
       - checkout
       - run:
           name: login to docker hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-
       - run:
-          name: build docker slim images
-          command: docker/build-circleci.sh -d slim -l
-      
-      - run:
-          name: build docker alpine images
-          command: docker/build-circleci.sh -d alpine
-
+          name: check and initiate builds
+          command: |
+            pyenv global 3.5.2
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            ./docker/ansible_docker_build.py -o slim -l
+            ./docker/ansible_docker_build.py -o alpine
 
 workflows:
   version: 2
