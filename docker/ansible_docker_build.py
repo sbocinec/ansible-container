@@ -8,7 +8,7 @@ import subprocess
 import sys
 from distutils.version import StrictVersion
 
-docket_image_tags = []
+docker_image_tags = []
 ansible_release_tags = []
 latest_version = ''
 latest_versions = {}
