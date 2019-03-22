@@ -8,6 +8,7 @@ RUN pip3 install --upgrade pip
 RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}
 
 FROM python:3.6-slim
+LABEL maintainer="sbocinec@juniq.eu"
 
 COPY --from=build /install /usr/local
 
