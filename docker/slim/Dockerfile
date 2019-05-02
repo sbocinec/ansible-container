@@ -10,6 +10,11 @@ RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}
 FROM python:3.6-slim
 LABEL maintainer="sbocinec@juniq.eu"
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-client rsync && \
+    apt-get clean  && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /install /usr/local
 
 ENV USER ansible
