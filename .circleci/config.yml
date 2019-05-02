@@ -21,6 +21,10 @@ jobs:
             ./ansible_docker_build.py -o slim -l
             ./ansible_docker_build.py -o alpine
 
+    branches:
+      only:
+        - master
+
 workflows:
   version: 2
   main:
