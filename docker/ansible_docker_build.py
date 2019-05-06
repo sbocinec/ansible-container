@@ -8,11 +8,9 @@ import subprocess
 import sys
 from distutils.version import StrictVersion
 
-docker_image_tags = []
-ansible_release_tags = []
-latest_version = ''
-latest_versions = {}
-build_versions = {}
+# latest_version = ''
+# latest_versions = {}
+# build_versions = {}
 
 class Github:
     def __init__(self, project):
@@ -33,8 +31,9 @@ class Github:
 class Ansible(Github):
     def __init__(self, project):
         super().__init__(project)
-
-
+        self.latest_version = ''
+        self.latest_versions = {}
+        self.build_candidates = {}
 
 
 class Docker:
@@ -44,6 +43,7 @@ class Docker:
 
 
     def __hub_auth(self):
+        """Get Docker Hub auth token"""
         docker_hub_auth_url = 'https://auth.docker.io/token?scope=repository:{}:pull&service=registry.docker.io'.format(self.docker_image)
         req = requests.get(docker_hub_auth_url)
         req.raise_for_status()
@@ -51,6 +51,7 @@ class Docker:
 
 
     def hub_get_image_tags(self, os):
+        """Get docker image tags for the docker_image repository"""
         token = self.__hub_auth()
         docker_hub_registry_url = 'https://registry-1.docker.io/v2/{}/tags/list'.format(self.docker_image)
         docker_hub_auth_headers = {
@@ -61,11 +62,6 @@ class Docker:
         req.raise_for_status()
         matcher = re.compile(r'^(\d+\.\d+\.\d+)-{}$'.format(os))
         self.docker_image_tags = [ver.strip('-{}'.format(os)) for ver in list(filter(matcher.search, req.json()['tags']))]
-
-
-    def print_image_tags(self):
-        print(self.docker_image_tags)
-
 
 
 def compare_version_higher(ver1, ver2):
@@ -79,17 +75,21 @@ def compare_version_higher(ver1, ver2):
 
 
 def normalize_version(version):
-    matcher = re.compile(r'^v?((\d+\.\d+).(\d+))$')
+    """
+    Normalize version string - strip 'v' prefix and return a list of 2 elements
+    """
+
+    matcher = re.compile(r'^v?((\d+\.\d+).\d+)$')
     match = re.match(matcher, version)
     if match is not None:
-        return [match.group(1), match.group(2), match.group(3)]
+        return [match.group(1), match.group(2)]
     else:
-        return [None, None, None]
+        return [None, None]
 
 
 def find_majmin_tags(ver_dict, ver_list):
     for ver_el in ver_list:
-        ver_full, ver_maj, ver_patch = normalize_version(ver_el)
+        ver_full, ver_maj = normalize_version(ver_el)
         if ver_full is not None:
             if ver_maj in ver_dict:
                 if compare_version_higher(ver_full, ver_dict[ver_maj]):
@@ -99,32 +99,33 @@ def find_majmin_tags(ver_dict, ver_list):
     return ver_dict
 
 
-def find_latest(ver_list):
+def find_latest(versions):
     latest = None
-    if len(ver_list) == 1:
-        return ver_list[0]
+    if len(versions) == 1:
+        return versions[0]
     else:
-        latest = ver_list[0]
-        for ver in ver_list:
-            if StrictVersion(ver) > StrictVersion(latest):
-                latest = ver
+        latest = versions[0]
+        for version in versions[1:]:
+            if StrictVersion(version) > StrictVersion(latest):
+                latest = version
     return latest
 
 
 def check_version(ansible_tags, docker_tags):
+    # find ansible versions that do not have docker image created
     for ansible_tag in ansible_tags:
-        ver_full, ver_maj, ver_patch = normalize_version(ansible_tag)
+        ver_full, ver_maj = normalize_version(ansible_tag)
         if ver_full is not None:
             print('Checking ansible_tag: "{}"'.format(ver_full))
             if ver_full in docker_tags:
                 print("{} image already exists in docker hub".format(ver_full))
             else:
                 print("{} image does not exist in docker hub, building".format(ver_full))
-                build_versions[ver_full] = True
-
+                build_candidates[ver_full] = True
 
 
 def run_command(cmd, dry_run=False):
+    # runs a command and return the subprocess.run returncode
     print(cmd)
     if dry_run:
         return 0
@@ -153,7 +154,9 @@ def test_images(images, repo, os):
 
     return images
 
+
 def tag_images(images, repo, os, latest, latest_dict, latest_value):
+    # tags newly created docker images and pushes it to the docker hub
     for image in images:
         if images[image]:
             # Pushing major.minor.patch-distro
@@ -161,7 +164,7 @@ def tag_images(images, repo, os, latest, latest_dict, latest_value):
             if run_command(cmd, args.dry_run) != 0:
                 images[image] = False
                 next
-            ver_full, ver_maj, ver_patch = normalize_version(image)
+            ver_full, ver_maj = normalize_version(image)
             if latest:
                 # major.minor.patch
                 cmd = 'docker tag {}:{}-{} {}:{}'.format(repo, image, os, repo, image)
@@ -225,9 +228,7 @@ def tag_images(images, repo, os, latest, latest_dict, latest_value):
     return images
 
 
-
 parser = argparse.ArgumentParser(description='Build and push Ansible docker images')
-
 parser.add_argument('-o', '--os', default='slim',
     help="name of the distro to build, e.g. slim, alpine", required=True)
 parser.add_argument('-l', '--latest', action="store_true",
@@ -238,7 +239,6 @@ parser.add_argument('-a', '--ansible-name', default='ansible/ansible', type=str,
     help="Ansible GitHub repository name, i.e. ansible/ansible")
 parser.add_argument('-d', '--dry-run', action="store_true",
     help="Dry run build script without any modifications")
-
 args = parser.parse_args()
 
 docker = Docker(args.repo_name)
@@ -247,17 +247,16 @@ docker.hub_get_image_tags(args.os)
 ansible =  Ansible(args.ansible_name)
 ansible.github_get_release_tags()
 
-latest_versions = find_majmin_tags(latest_versions, docker.docker_image_tags)
-print(latest_versions)
+ansible.latest_versions = find_majmin_tags(ansible.latest_versions, docker.docker_image_tags)
 check_version(ansible.release_tags, docker.docker_image_tags)
-build_versions = build_images(build_versions, args.repo_name, args.os)
-build_versions = test_images(build_versions, args.repo_name, args.os)
-latest_versions = find_majmin_tags(latest_versions, [key for key in build_versions if build_versions[key]])
+build_candidates = build_images(build_candidates, args.repo_name, args.os)
+build_candidates = test_images(build_candidates, args.repo_name, args.os)
+latest_versions = find_majmin_tags(latest_versions, [key for key in build_candidates if build_candidates[key]])
 latest_version = find_latest(list(latest_versions.values()))
 
-build_versions = tag_images(build_versions, args.repo_name, args.os, args.latest, latest_versions, latest_version)
+build_candidates = tag_images(build_candidates, args.repo_name, args.os, args.latest, latest_versions, latest_version)
 
-failed_builds = [key for key in build_versions if not build_versions[key]]
+failed_builds = [key for key in build_candidates if not build_candidates[key]]
 if len(failed_builds) > 0:
     print('Failed to build docker images for following ansible versions: {}'.format(failed_builds))
     sys.exit(1)
