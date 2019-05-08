@@ -114,14 +114,14 @@ def find_latest(versions):
 def check_version(ansible_tags, docker_tags):
     # find ansible versions that do not have docker image created
     for ansible_tag in ansible_tags:
-        ver_full, ver_maj = normalize_version(ansible_tag)
+        ver_full, _ = normalize_version(ansible_tag)
         if ver_full is not None:
             print('Checking ansible_tag: "{}"'.format(ver_full))
             if ver_full in docker_tags:
                 print("{} image already exists in docker hub".format(ver_full))
             else:
                 print("{} image does not exist in docker hub, building".format(ver_full))
-                build_candidates[ver_full] = True
+                ansible.build_candidates[ver_full] = True
 
 
 def run_command(cmd, dry_run=False):
@@ -164,7 +164,7 @@ def tag_images(images, repo, os, latest, latest_dict, latest_value):
             if run_command(cmd, args.dry_run) != 0:
                 images[image] = False
                 next
-            ver_full, ver_maj = normalize_version(image)
+            _ , ver_maj = normalize_version(image)
             if latest:
                 # major.minor.patch
                 cmd = 'docker tag {}:{}-{} {}:{}'.format(repo, image, os, repo, image)
@@ -249,14 +249,14 @@ ansible.github_get_release_tags()
 
 ansible.latest_versions = find_majmin_tags(ansible.latest_versions, docker.docker_image_tags)
 check_version(ansible.release_tags, docker.docker_image_tags)
-build_candidates = build_images(build_candidates, args.repo_name, args.os)
-build_candidates = test_images(build_candidates, args.repo_name, args.os)
-latest_versions = find_majmin_tags(latest_versions, [key for key in build_candidates if build_candidates[key]])
-latest_version = find_latest(list(latest_versions.values()))
+ansible.build_candidates = build_images(ansible.build_candidates, args.repo_name, args.os)
+ansible.build_candidates = test_images(ansible.build_candidates, args.repo_name, args.os)
+ansible.latest_versions = find_majmin_tags(ansible.latest_versions, [key for key in ansible.build_candidates if ansible.build_candidates[key]])
+latest_version = find_latest(list(ansible.latest_versions.values()))
 
-build_candidates = tag_images(build_candidates, args.repo_name, args.os, args.latest, latest_versions, latest_version)
+ansible.build_candidates = tag_images(ansible.build_candidates, args.repo_name, args.os, args.latest, ansible.latest_versions, latest_version)
 
-failed_builds = [key for key in build_candidates if not build_candidates[key]]
+failed_builds = [key for key in ansible.build_candidates if not ansible.build_candidates[key]]
 if len(failed_builds) > 0:
     print('Failed to build docker images for following ansible versions: {}'.format(failed_builds))
     sys.exit(1)
