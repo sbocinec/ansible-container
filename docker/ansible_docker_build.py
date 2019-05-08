@@ -89,78 +89,82 @@ class Docker:
                     next
 
 
-
-    def tag_images(self):
+    def tag_push_images(self):
         """Tag newly built docker images and push them to the docker hub"""
         maj_min_versions = find_majmin_versions(list(set(self.docker_image_tags + [key for key in self.image_build_status if self.image_build_status[key]])))
         latest_version = find_latest(list(maj_min_versions.values()))
 
-        for image in self.image_build_status:
-            if self.image_build_status[image]:
+        for image_version in self.image_build_status:
+            if self.image_build_status[image_version]:
                 # Pushing major.minor.patch-distro
-                cmd = 'docker push {}:{}-{}'.format(self.repository, image, self.os)
+                cmd = 'docker push {}:{}-{}'.format(self.repository, image_version, self.os)
                 if run_command(cmd, args.dry_run) != 0:
-                    self.image_build_status[image] = False
+                    self.image_build_status[image_version] = False
                     next
-                _ , version_major = normalize_version(image)
+                _, version_major = normalize_version(image_version)
+
                 if self.is_latest:
                     # major.minor.patch
-                    cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image, self.os, self.repository, image)
+                    cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image_version, self.os, self.repository, image_version)
                     if run_command(cmd, args.dry_run) != 0:
-                        self.image_build_status[image] = False
+                        self.image_build_status[image_version] = False
                         next
-                    cmd = 'docker push {}:{}'.format(self.repository, image)
+                    cmd = 'docker push {}:{}'.format(self.repository, image_version)
                     if run_command(cmd, args.dry_run) != 0:
-                        self.image_build_status[image] = False
+                        self.image_build_status[image_version] = False
                         next
-                    if maj_min_versions[version_major] == image:
+
+                    if maj_min_versions[version_major] == image_version:
                         # major.minor
-                        cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image, self.os, self.repository, version_major)
+                        cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image_version, self.os, self.repository, version_major)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                         cmd = 'docker push {}:{}'.format(self.repository, version_major)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
+
                         # major.minor-os
-                        cmd = 'docker tag {}:{}-{} {}:{}-{}'.format(self.repository, image, self.os, self.repository, version_major, self.os)
+                        cmd = 'docker tag {}:{}-{} {}:{}-{}'.format(self.repository, image_version, self.os, self.repository, version_major, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                         cmd = 'docker push {}:{}-{}'.format(self.repository, version_major, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
-                    if latest_version == image:
+
+                    if latest_version == image_version:
                         # latest
-                        cmd = 'docker tag {}:{}-{} {}:latest'.format(self.repository, image, self.os, self.repository)
+                        cmd = 'docker tag {}:{}-{} {}:latest'.format(self.repository, image_version, self.os, self.repository)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                         cmd = 'docker push {}:latest'.format(self.repository)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
+
                         # os
-                        cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image, self.os, self.repository, self.os)
+                        cmd = 'docker tag {}:{}-{} {}:{}'.format(self.repository, image_version, self.os, self.repository, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                         cmd = 'docker push {}:{}'.format(self.repository, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                 else:
-                    if maj_min_versions[version_major] == image:
+                    if maj_min_versions[version_major] == image_version:
                         # major.minor-os
-                        cmd = 'docker tag {}:{}-{} {}:{}-{}'.format(self.repository, image, self.os, self.repository, version_major, self.os)
+                        cmd = 'docker tag {}:{}-{} {}:{}-{}'.format(self.repository, image_version, self.os, self.repository, version_major, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
                         cmd = 'docker push {}:{}-{}'.format(self.repository, version_major, self.os)
                         if run_command(cmd, args.dry_run) != 0:
-                            self.image_build_status[image] = False
+                            self.image_build_status[image_version] = False
                             next
 
 
@@ -248,7 +252,7 @@ docker.get_hub_image_tags()
 docker.find_build_candidates(ansible.release_tags)
 docker.build_images()
 docker.test_images()
-docker.tag_images()
+docker.tag_push_images()
 build_status = docker.get_build_status()
 failed_builds = [key for key in build_status if not build_status[key]]
 if len(failed_builds) > 0:
