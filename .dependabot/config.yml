@@ -3,7 +3,13 @@ update_configs:
   - package_manager: "docker"
     directory: "docker/slim"
     update_schedule: "daily"
+    allowed_updates:
+      - match:
+          update_type: "security"
   
   - package_manager: "docker"
     directory: "docker/alpine"
     update_schedule: "daily"
+    allowed_updates:
+      - match:
+          update_type: "security"
