@@ -1,0 +1,9 @@
+version: 1
+update_configs:
+  - package_manager: "docker"
+    directory: "docker/slim"
+    update_schedule: "daily"
+  
+  - package_manager: "docker"
+    directory: "docker/alpine"
+    update_schedule: "daily"
