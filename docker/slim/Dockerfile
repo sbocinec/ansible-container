@@ -1,4 +1,4 @@
-FROM python:3.6-slim as build
+FROM python:3.9.2-slim as build
 
 ARG ANSIBLE_VERSION
 
@@ -7,7 +7,7 @@ RUN apt-get update && \
 RUN pip3 install --upgrade pip
 RUN pip install --install-option="--prefix=/install" ansible==${ANSIBLE_VERSION}
 
-FROM python:3.6-slim
+FROM python:3.9.2-slim
 LABEL maintainer="sbocinec@juniq.eu"
 
 RUN apt-get update && \
