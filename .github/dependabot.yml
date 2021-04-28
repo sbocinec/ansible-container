@@ -1,0 +1,28 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: "/docker/slim"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  target-branch: devel
+  ignore:
+  - dependency-name: python
+    versions:
+    - 3.9.1.pre.slim
+    - 3.9.2.pre.slim
+    - 3.9.3.pre.slim
+- package-ecosystem: docker
+  directory: "/docker/alpine"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  target-branch: devel
+  ignore:
+  - dependency-name: python
+    versions:
+    - 3.9.1.pre.alpine
+    - 3.9.2.pre.alpine
+    - 3.9.3.pre.alpine
